@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hospital Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <h1>Hospital Management System</h1>
+    <nav>
+      <a href="{{ url_for('index') }}">Home</a> |
+      <a href="{{ url_for('dashboard') }}">Dashboard</a> |
+      <a href="{{ url_for('patients_page') }}">Patients</a> |
+      <a href="{{ url_for('doctors_page') }}">Doctors</a> |
+      <a href="{{ url_for('appointments_page') }}">Appointments</a> |
+      <a href="{{ url_for('billing_page') }}">Billing</a> |
+      <a href="{{ url_for('reports_page') }}">Reports</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <small>&copy; {{ current_year if current_year else "" }} Hospital Management</small>
+  </footer>
+
+  <script>
+    window.APP = { baseUrl: "{{ url_for('index', _external=False) }}" }
+  </script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

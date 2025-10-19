@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>Add Patient</h2>
+  <form id="add-patient-form">
+    <label>Name <input type="text" id="name" name="name" required></label>
+    <label>Age <input type="number" id="age" name="age"></label>
+    <label>Medical history <textarea id="medical_history" name="medical_history"></textarea></label>
+    <button type="submit">Add Patient</button>
+  </form>
+</section>
+
+<section>
+  <h2>Recent Patients</h2>
+  <div id="patient-info"></div>
+</section>
+{% endblock %}

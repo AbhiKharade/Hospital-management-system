@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Admin — Doctors</title></head>
+<body>
+  <h1>Doctors</h1>
+  <p><a href="{{ url_for('admin_dashboard') }}">Back to dashboard</a></p>
+  {% extends "base.html" %}
+{% block title %}Admin — Doctors{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">Admin · Doctors</h2>
+  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin_dashboard') }}">← Back to admin</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Add doctor</h5>
+        <form method="post" action="{{ url_for('admin_doctors') }}">
+          <div class="mb-2">
+            <label class="form-label">Name</label>
+            <input name="name" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Specialty</label>
+            <input name="specialty" class="form-control">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Phone</label>
+            <input name="phone" class="form-control">
+          </div>
+          <button class="btn btn-success" type="submit">Add doctor</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <h5 class="mb-2">Existing doctors</h5>
+    {% if doctors %}
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Specialty</th>
+              <th>Phone</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in doctors %}
+              <tr>
+                <td>{{ d.id }}</td>
+                <td>{{ d.name }}</td>
+                <td>{{ d.specialty or '—' }}</td>
+                <td>{{ d.phone or '—' }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-primary" href="{{ url_for('admin_edit_doctor', did=d.id) }}">Edit</a>
+                  <form method="post" action="{{ url_for('admin_delete_doctor', did=d.id) }}" style="display:inline" onsubmit="return confirm('Delete doctor #{{ d.id }}?');">
+                    <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-secondary">No doctors found.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+</body>
+</html>

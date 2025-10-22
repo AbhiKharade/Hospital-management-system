@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Admin — Bills{% endblock %}
+{% block content %}
+<h2>Admin · Bills</h2>
+<p><a href="{{ url_for('admin_dashboard') }}">← Back to admin</a></p>
+
+<div class="row">
+  <div class="col-md-5">
+    <h5 class="mb-3">Create bill</h5>
+    <form method="post">
+      <div class="mb-2">
+        <label class="form-label">Patient</label>
+        <select name="patient_id" class="form-select" required>
+          <option value="" disabled selected>Choose a patient</option>
+          {% for p in patients %}
+            <option value="{{ p.id }}">{{ p.name }}{% if p.age %} (age {{ p.age }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">Amount (USD)</label>
+        <input name="amount" type="number" step="0.01" class="form-control" required>
+      </div>
+
+      <div class="mb-2 form-check">
+        <input name="paid" value="1" type="checkbox" class="form-check-input" id="paidCheck">
+        <label class="form-check-label" for="paidCheck">Paid</label>
+      </div>
+
+      <button class="btn btn-success" type="submit">Create bill</button>
+    </form>
+  </div>
+
+  <div class="col-md-7">
+    <h5 class="mb-3">Existing bills</h5>
+    {% if bills %}
+      <div class="table-responsive">
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Patient</th>
+              <th>Amount</th>
+              <th>Paid</th>
+              <th>Issued</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bills %}
+            <tr>
+              <td>{{ b.id }}</td>
+              <td>{{ b.patient.name if b.patient else ('#' ~ b.patient_id) }}</td>
+              <td>${{ '%.2f'|format(b.amount) }}</td>
+              <td>
+                {% if b.paid %}
+                  <span class="badge bg-success">Paid</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">Unpaid</span>
+                {% endif %}
+              </td>
+              <td>{{ b.issued_at.strftime('%Y-%m-%d %H:%M') if b.issued_at else '—' }}</td>
+              <td>
+                <form method="post" action="{{ url_for('admin_delete_bill', bid=b.id) }}" onsubmit="return confirm('Delete bill #{{ b.id }}?');">
+                  <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-secondary">No bills found.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

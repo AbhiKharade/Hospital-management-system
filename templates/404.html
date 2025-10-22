@@ -1,5 +1,9 @@
 {% extends "base.html" %}
+{% block title %}Not Found — Hospital{% endblock %}
 {% block content %}
-<h2>404 — Not Found</h2>
-<p>The requested page was not found.</p>
+<div class="text-center py-5">
+  <h1 class="display-6">404 — Not Found</h1>
+  <p class="lead">The page you requested could not be found.</p>
+  <a class="btn btn-primary" href="{{ url_for('index') }}">Return home</a>
+</div>
 {% endblock %}

@@ -1,5 +1,14 @@
 {% extends "base.html" %}
+{% block title %}Reports — Hospital{% endblock %}
 {% block content %}
 <h2>Reports</h2>
-<p>Generate reports here.</p>
+<p class="text-muted">Simple reports placeholder. Admin can extend reports with real data and exports.</p>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Quick stats</h5>
+    <p class="card-text">Use the backend APIs to compute statistics (patient counts, appointments per day, unpaid bills).</p>
+    <p><small class="text-muted">This is a demo; add server-side aggregation for production use.</small></p>
+  </div>
+</div>
 {% endblock %}

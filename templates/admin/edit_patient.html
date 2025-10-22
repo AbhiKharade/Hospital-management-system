@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Edit Patient</title></head>
+<body>
+  <h1>Edit Patient</h1>
+  <form method="post">
+    <label>Name <input name="name" value="{{ patient.name }}"></label><br>
+    <label>Age <input name="age" value="{{ patient.age }}" type="number"></label><br>
+    <label>Medical history <textarea name="medical_history">{{ patient.medical_history }}</textarea></label><br>
+    <button type="submit">Save</button>
+  </form>
+  <p><a href="{{ url_for('admin_patients') }}">Back</a></p>
+</body>
+</html>

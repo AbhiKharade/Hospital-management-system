@@ -1,17 +1,135 @@
 {% extends "base.html" %}
-{% block content %}
-<section>
-  <h2>Add Patient</h2>
-  <form id="add-patient-form">
-    <label>Name <input type="text" id="name" name="name" required></label>
-    <label>Age <input type="number" id="age" name="age"></label>
-    <label>Medical history <textarea id="medical_history" name="medical_history"></textarea></label>
-    <button type="submit">Add Patient</button>
-  </form>
-</section>
+{% block title %}Home — Hospital Management System{% endblock %}
 
-<section>
-  <h2>Recent Patients</h2>
-  <div id="patient-info"></div>
-</section>
+{% block content %}
+<style>
+  :root{
+    --bg:#f6fbff;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --accent:#0b74ff;
+    --radius:14px;
+  }
+
+  .wrap {
+    max-width:1100px;
+    margin:28px auto;
+    padding:20px;
+  }
+
+  .hero {
+    position:relative;
+    display:flex;
+    gap:24px;
+    align-items:center;
+    justify-content:space-between;
+    padding:28px;
+    border-radius:var(--radius);
+    background:linear-gradient(180deg,#ffffff 0%, rgba(246,251,255,0.6) 100%);
+    overflow:hidden;
+    box-shadow: 0 12px 30px rgba(11,39,90,0.06);
+    flex-wrap:wrap;
+  }
+
+  .hero .cover {
+    position:absolute;
+    inset:0;
+    background-image: url("{{ url_for('static', filename='images/hero.jpg') }}");
+    background-size:cover;
+    background-position:center;
+    filter: blur(6px) saturate(.9) brightness(.84);
+    opacity:.30;
+    z-index:0;
+  }
+
+  .hero-left { position:relative; z-index:1; flex:1 1 420px; min-width:0; }
+  .hero-right { position:relative; z-index:1; flex:0 0 360px; display:flex; align-items:center; justify-content:center; }
+
+  .hero h1 { margin:0 0 8px; font-size:clamp(1.4rem,2.6vw,2.0rem); color:#06243f; line-height:1.05; }
+  .hero p.lead { margin:0; color:var(--muted); }
+
+  .cta { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .btn-cta { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:10px; text-decoration:none; font-weight:600; cursor:pointer; }
+  .btn-primary { background:linear-gradient(90deg,var(--accent),#0873ff); color:#fff; box-shadow:0 8px 20px rgba(11,117,255,0.12); }
+  .btn-outline { background:transparent; color:var(--accent); border:1px solid rgba(11,117,255,0.12); padding:9px 14px; }
+
+  .feature-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:18px; }
+  .feature { background:var(--card); padding:12px; border-radius:10px; box-shadow:0 6px 18px rgba(11,39,90,0.03); display:flex; gap:12px; align-items:flex-start; }
+  .feature svg { flex:0 0 40px; width:40px; height:40px; }
+  .feature strong { display:block; margin-bottom:4px; color:#07304f; }
+  .feature small { color:var(--muted); }
+
+  .gallery { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  .gallery img { width:calc(33.333% - 6.66px); border-radius:8px; object-fit:cover; height:110px; box-shadow:0 6px 16px rgba(11,39,90,0.04); }
+  @media (max-width:800px){ .gallery img{ width:calc(50% - 6px); height:90px; } }
+
+  .hero-right img{ width:100%; height:auto; border-radius:10px; box-shadow:0 8px 24px rgba(11,39,90,0.06); }
+
+  footer.clean{ margin-top:22px; color:var(--muted); font-size:0.9rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+
+  @media (max-width:880px){
+    .hero-right { order:2; flex-basis:100%; margin-top:12px; }
+    .hero-left { flex-basis:100%; }
+  }
+</style>
+
+<div class="wrap">
+  <section class="hero" aria-labelledby="home-heading">
+    <div class="cover" aria-hidden="true"></div>
+
+    <div class="hero-left">
+      <h1 id="home-heading">Hospital Management — simple, beautiful, responsive</h1>
+      <p class="lead">A compact system to manage patients, doctors, appointments and billing. Optimized for phones and laptops.</p>
+
+      <div class="cta" role="group" aria-label="Primary actions">
+        <a class="btn-cta btn-primary" href="{{ url_for('dashboard') }}">Open Dashboard</a>
+        <a class="btn-cta btn-outline" href="{{ url_for('patients_page') }}">Browse Patients</a>
+      </div>
+
+      <div class="feature-row" aria-hidden="false">
+        <div class="feature">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" fill="#0b74ff"/></svg>
+          <div>
+            <strong>Patient Records</strong>
+            <small>Store and review patient history with ease.</small>
+          </div>
+        </div>
+
+        <div class="feature">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2" fill="#0b74ff"/></svg>
+          <div>
+            <strong>Scheduling</strong>
+            <small>Create appointments and manage schedules.</small>
+          </div>
+        </div>
+
+        <div class="feature">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="8" width="16" height="10" rx="2" fill="#0b74ff"/></svg>
+          <div>
+            <strong>Billing</strong>
+            <small>Issue invoices and track payments quickly.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery" aria-hidden="false">
+        <img src="{{ url_for('static', filename='images/patient1.jpg') }}" alt="Doctor with patient">
+        <img src="{{ url_for('static', filename='images/patient2.jpg') }}" alt="Nurse caring for patient">
+        <img src="{{ url_for('static', filename='images/patient3.jpg') }}" alt="Hospital ward">
+      </div>
+    </div>
+
+    <div class="hero-right" aria-hidden="true">
+      <picture>
+        <source media="(max-width:600px)" srcset="{{ url_for('static', filename='images/hero.jpg') }}">
+        <img src="{{ url_for('static', filename='images/hero.jpg') }}" alt="Hospital staff and patients">
+      </picture>
+    </div>
+  </section>
+
+  <footer class="clean" role="contentinfo">
+    <div>Hospital Management System — demo</div>
+    <div><a href="{{ url_for('dashboard') }}">Dashboard</a> · <a href="{{ url_for('patients_page') }}">Patients</a></div>
+  </footer>
+</div>
 {% endblock %}

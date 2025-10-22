@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Admin — Dashboard{% endblock %}
+{% block content %}
+<h2>Admin Dashboard</h2>
+<p>Signed in as <strong>{{ session.get('admin_username') }}</strong></p>
+
+<div class="row mt-4">
+  <div class="col-md-3">
+    <div class="list-group">
+      <a class="list-group-item list-group-item-action" href="{{ url_for('admin_patients') }}">Manage Patients</a>
+      <a class="list-group-item list-group-item-action" href="{{ url_for('admin_doctors') }}">Manage Doctors</a>
+      <a class="list-group-item list-group-item-action" href="{{ url_for('admin_appointments') }}">Manage Appointments</a>
+      <a class="list-group-item list-group-item-action" href="{{ url_for('admin_bills') }}">Manage Bills</a>
+      <a class="list-group-item list-group-item-action" href="{{ url_for('admin_logout') }}">Logout</a>
+    </div>
+  </div>
+  <div class="col-md-9">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Overview</h5>
+        <p class="card-text">Use the links on the left to perform full CRUD operations for this demo application.</p>
+        <p class="small text-muted">Tip: create an admin via: <code>flask --app app.py create-admin</code></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

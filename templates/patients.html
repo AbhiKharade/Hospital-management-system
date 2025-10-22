@@ -1,8 +1,158 @@
 {% extends "base.html" %}
+{% block title %}Patients — Hospital{% endblock %}
 {% block content %}
-<h2>Patients</h2>
-<table id="patients-table">
-  <thead><tr><th>ID</th><th>Name</th><th>Age</th><th>Medical History</th></tr></thead>
-  <tbody></tbody>
-</table>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2 class="mb-0">Patients</h2>
+    <p class="text-muted mb-0">Browse patient records. Use Admin to add or edit entries.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <input id="search" class="form-control form-control-sm" style="min-width:220px" placeholder="Search by name or id">
+    {% if session.get('admin_logged_in') %}
+      <a class="btn btn-sm btn-primary" href="{{ url_for('admin_patients') }}">Manage Patients</a>
+    {% else %}
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin_login') }}">Admin Login</a>
+    {% endif %}
+  </div>
+</div>
+
+<div id="patients-area">
+  <div id="loader" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+  </div>
+
+  <div id="controls" class="mb-2 d-none">
+    <small class="text-muted" id="count"></small>
+  </div>
+
+  <div id="cards" class="row g-3"></div>
+
+  <div class="text-center mt-3 d-none" id="empty">
+    <div class="alert alert-secondary">No patients found.</div>
+  </div>
+
+  <div class="d-flex justify-content-center mt-3">
+    <button id="loadMore" class="btn btn-outline-primary d-none">Load more</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const API = '/api/patients';
+  const pageSize = 10;
+  let patients = [];
+  let filtered = [];
+  let page = 0;
+
+  // safe JSON injection of boolean
+  const IS_ADMIN = {{ session.get('admin_logged_in')|tojson }};
+
+  const loader = document.getElementById('loader');
+  const cards = document.getElementById('cards');
+  const empty = document.getElementById('empty');
+  const loadMoreBtn = document.getElementById('loadMore');
+  const searchInput = document.getElementById('search');
+  const controls = document.getElementById('controls');
+  const countEl = document.getElementById('count');
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleString(); } catch { return iso; }
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function renderItem(p) {
+    const age = (p.age !== null && p.age !== undefined && p.age !== '') ? ` • Age: ${p.age}` : '';
+    const created = fmtDate(p.created_at);
+    // build optional admin edit button on client side
+    let editBtn = '';
+    if (IS_ADMIN) {
+      editBtn = `<a class="btn btn-sm btn-primary" href="/admin/patients/${p.id}/edit">Edit</a>`;
+    }
+    return `
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start">
+              <h5 class="card-title mb-1">${escapeHtml(p.name)}</h5>
+              <small class="text-muted">#${p.id}</small>
+            </div>
+            <p class="card-text small text-muted mb-2">${created}${age}</p>
+            <div class="mt-auto">
+              <p class="mb-1">${escapeHtml(p.medical_history || '')}</p>
+              <div class="d-flex gap-2">
+                <a class="btn btn-sm btn-outline-primary" href="/api/patients/${p.id}" target="_blank">View JSON</a>
+                ${editBtn}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderPage() {
+    const start = page * pageSize;
+    const end = start + pageSize;
+    const slice = filtered.slice(start, end);
+    if (page === 0) cards.innerHTML = '';
+    slice.forEach(p => cards.insertAdjacentHTML('beforeend', renderItem(p)));
+    // controls
+    countEl.textContent = `${filtered.length} patient${filtered.length !== 1 ? 's' : ''}`;
+    controls.classList.remove('d-none');
+    // empty
+    if (filtered.length === 0) {
+      empty.classList.remove('d-none');
+    } else {
+      empty.classList.add('d-none');
+    }
+    // load more button
+    if (end < filtered.length) {
+      loadMoreBtn.classList.remove('d-none');
+    } else {
+      loadMoreBtn.classList.add('d-none');
+    }
+  }
+
+  function applyFilter() {
+    const q = (searchInput.value || '').trim().toLowerCase();
+    filtered = patients.filter(p => {
+      if (!q) return true;
+      return String(p.id).includes(q) || (p.name || '').toLowerCase().includes(q) || (p.medical_history || '').toLowerCase().includes(q);
+    });
+    page = 0;
+    renderPage();
+  }
+
+  loadMoreBtn.addEventListener('click', () => {
+    page++;
+    renderPage();
+  });
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchInput._t);
+    searchInput._t = setTimeout(applyFilter, 150);
+  });
+
+  async function load() {
+    try {
+      const res = await fetch(API, {cache: 'no-store'});
+      if (!res.ok) throw new Error('Failed to fetch');
+      patients = await res.json();
+      // ensure consistent fields
+      patients = patients.map(p => ({ id: p.id, name: p.name || '', age: p.age, medical_history: p.medical_history || '', created_at: p.created_at }));
+      filtered = patients.slice();
+      loader.classList.add('d-none');
+      renderPage();
+    } catch (err) {
+      loader.innerHTML = '<div class="alert alert-danger">Unable to load patients. Check server or network.</div>';
+      console.error(err);
+    }
+  }
+
+  load();
+})();
+</script>
 {% endblock %}

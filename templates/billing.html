@@ -1,5 +1,46 @@
 {% extends "base.html" %}
+{% block title %}Billing — Hospital{% endblock %}
 {% block content %}
 <h2>Billing</h2>
-<p>Billing records and invoices.</p>
+<p class="text-muted">Bills and payments (read-only). Use Admin to create or update bills.</p>
+
+<div id="bills" class="mt-3">
+  <div class="spinner-border text-primary" role="status" id="loading-bills">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <ul class="list-group d-none" id="list-bills"></ul>
+  <div class="mt-3" id="empty-bills" style="display:none">No bills found.</div>
+</div>
+
+<script>
+async function loadBills() {
+  const list = document.getElementById('list-bills');
+  const loading = document.getElementById('loading-bills');
+  const empty = document.getElementById('empty-bills');
+  try {
+    const res = await fetch('/api/bills');
+    const data = await res.json();
+    loading.classList.add('d-none');
+    if (!data || data.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    list.classList.remove('d-none');
+    data.forEach(b => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-start';
+      li.innerHTML = `<div>
+                        <div><strong>Bill #${b.id}</strong> — Patient: ${b.patient_id}</div>
+                        <div class="small">Amount: $${b.amount.toFixed(2)} — ${b.paid ? '<span class="text-success">Paid</span>' : '<span class="text-warning">Unpaid</span>'}</div>
+                      </div>`;
+      list.appendChild(li);
+    });
+  } catch (e) {
+    loading.classList.add('d-none');
+    empty.style.display = 'block';
+    empty.textContent = 'Failed to load bills.';
+  }
+}
+loadBills();
+</script>
 {% endblock %}

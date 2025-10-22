@@ -1,5 +1,154 @@
 {% extends "base.html" %}
+{% block title %}Dashboard — Hospital{% endblock %}
+
 {% block content %}
-<h2>Dashboard</h2>
-<p>Quick overview and KPIs will appear here.</p>
+<style>
+  .dash-hero {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    padding:20px;
+    background:linear-gradient(180deg,#fff 0%,#f7fbff 100%);
+    border-radius:10px;
+    box-shadow:0 6px 18px rgba(15,23,42,0.04);
+    margin-bottom:16px;
+  }
+  .dash-hero h2 { margin:0; color:#0b3b66; }
+  .dash-hero p { margin:0; color:#556b7a; }
+
+  .metrics {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:12px;
+    margin-top:12px;
+  }
+  .metric {
+    background:#fff;
+    border-radius:10px;
+    padding:12px;
+    text-align:center;
+    box-shadow:0 4px 12px rgba(12,42,80,0.03);
+  }
+  .metric .num { font-size:1.35rem; font-weight:700; color:#0b3b66; }
+  .metric .label { color:#6b7280; font-size:0.85rem; margin-top:6px; }
+
+  .quick-actions {
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:12px 0;
+  }
+  .card-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:12px;
+  }
+  .card {
+    background:#fff;
+    padding:12px;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(12,42,80,0.03);
+  }
+
+  @media(min-width:900px) {
+    .dash-hero { flex-direction:row; align-items:center; justify-content:space-between; }
+    .dash-hero .left { flex:1; }
+  }
+</style>
+
+<div class="dash-hero">
+  <div class="left">
+    <h2>Welcome to the Hospital Dashboard</h2>
+    <p class="lead">Quick overview and shortcuts. Works well on phones and laptops.</p>
+
+    <div class="quick-actions" aria-hidden="false">
+      <a class="btn btn-primary" href="{{ url_for('patients_page') }}">Patients</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('doctors_page') }}">Doctors</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('appointments_page') }}">Appointments</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('billing_page') }}">Billing</a>
+      {% if session.get('admin_logged_in') %}
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('admin_dashboard') }}">Admin</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="min-width:180px; display:flex; gap:10px; align-items:center;">
+    <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+      <rect x="2" y="2" width="116" height="76" rx="8" fill="#f7fbff" stroke="#e6eef9"/>
+      <rect x="12" y="14" width="36" height="36" rx="6" fill="#0d6efd"/>
+      <rect x="58" y="18" width="44" height="8" rx="4" fill="#0d6efd" opacity="0.14"/>
+      <rect x="58" y="34" width="30" height="6" rx="3" fill="#0d6efd" opacity="0.1"/>
+    </svg>
+  </div>
+</div>
+
+<section class="metrics" id="metrics">
+  <div class="metric">
+    <div class="num" id="m-patients">—</div>
+    <div class="label">Patients</div>
+  </div>
+  <div class="metric">
+    <div class="num" id="m-doctors">—</div>
+    <div class="label">Doctors</div>
+  </div>
+  <div class="metric">
+    <div class="num" id="m-appointments">—</div>
+    <div class="label">Appointments</div>
+  </div>
+  <div class="metric">
+    <div class="num" id="m-bills">—</div>
+    <div class="label">Bills</div>
+  </div>
+</section>
+
+<section style="margin-top:14px;">
+  <div class="card-grid">
+    <div class="card">
+      <h4 style="margin:0 0 8px;">Recent patients</h4>
+      <div id="recent-patients">Loading…</div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin:0 0 8px;">Upcoming appointments</h4>
+      <div id="recent-appointments">Loading…</div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin:0 0 8px;">Unpaid bills</h4>
+      <div id="recent-bills">Loading…</div>
+    </div>
+  </div>
+</section>
+
+<script>
+(async () => {
+  async function fetchJson(path){ try{ const r = await fetch(path,{cache:'no-store'}); if(!r.ok) return null; return await r.json(); }catch(e){return null;} }
+  const patients = await fetchJson('/api/patients') || [];
+  const doctors = await fetchJson('/api/doctors') || [];
+  const appointments = await fetchJson('/api/appointments') || [];
+  const bills = await fetchJson('/api/bills') || [];
+
+  document.getElementById('m-patients').textContent = patients.length || '0';
+  document.getElementById('m-doctors').textContent = doctors.length || '0';
+  document.getElementById('m-appointments').textContent = appointments.length || '0';
+  document.getElementById('m-bills').textContent = bills.length || '0';
+
+  // recent patients
+  const rp = patients.slice(0,5).map(p => `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;"><strong>${(p.name||'—')}</strong><div class="small text-muted">#${p.id} • ${p.age ?? '—'}</div></div>`).join('') || '<div class="small text-muted">No patients</div>';
+  document.getElementById('recent-patients').innerHTML = rp;
+
+  // upcoming appointments (sorted)
+  const apSorted = (appointments || []).slice().sort((a,b)=> new Date(a.scheduled_at||0) - new Date(b.scheduled_at||0)).slice(0,5);
+  const ra = apSorted.map(a => {
+    const when = a.scheduled_at ? new Date(a.scheduled_at).toLocaleString() : '—';
+    return `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;"><strong>Appointment #${a.id}</strong><div class="small text-muted">${when} • P:${a.patient_id} D:${a.doctor_id}</div></div>`;
+  }).join('') || '<div class="small text-muted">No appointments</div>';
+  document.getElementById('recent-appointments').innerHTML = ra;
+
+  // unpaid bills
+  const unpaid = (bills || []).filter(b => !b.paid).slice(0,5);
+  const rb = unpaid.map(b => `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;"><strong>Bill #${b.id}</strong><div class="small text-muted">Patient:${b.patient_id} • $${(b.amount||0).toFixed(2)}</div></div>`).join('') || '<div class="small text-muted">No unpaid bills</div>';
+  document.getElementById('recent-bills').innerHTML = rb;
+})();
+</script>
 {% endblock %}

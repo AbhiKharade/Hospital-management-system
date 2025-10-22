@@ -1,5 +1,44 @@
 {% extends "base.html" %}
+{% block title %}Doctors — Hospital{% endblock %}
 {% block content %}
 <h2>Doctors</h2>
-<p>Doctor list and details.</p>
+<p class="text-muted">List of doctors (read-only). Use Admin to modify.</p>
+
+<div id="doctors-list" class="mt-3">
+  <div class="spinner-border text-primary" role="status" id="loading-doctors">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <ul class="list-group d-none" id="list-doctors"></ul>
+  <div class="mt-3" id="empty-doctors" style="display:none">No doctors found.</div>
+</div>
+
+<script>
+async function loadDoctors() {
+  const list = document.getElementById('list-doctors');
+  const loading = document.getElementById('loading-doctors');
+  const empty = document.getElementById('empty-doctors');
+  try {
+    const res = await fetch('/api/doctors');
+    const data = await res.json();
+    loading.classList.add('d-none');
+    if (!data || data.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    list.classList.remove('d-none');
+    data.forEach(d => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item';
+      li.innerHTML = `<strong>${d.name}</strong> <small class="text-muted">(#${d.id})</small>
+                      <div class="small">${d.specialty ?? ''} • ${d.phone ?? ''}</div>`;
+      list.appendChild(li);
+    });
+  } catch (e) {
+    loading.classList.add('d-none');
+    empty.style.display = 'block';
+    empty.textContent = 'Failed to load doctors.';
+  }
+}
+loadDoctors();
+</script>
 {% endblock %}

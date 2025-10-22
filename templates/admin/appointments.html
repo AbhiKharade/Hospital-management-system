@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Admin — Appointments{% endblock %}
+{% block content %}
+<h2>Admin · Appointments</h2>
+<p><a href="{{ url_for('admin_dashboard') }}">← Back to admin</a></p>
+
+<div class="row">
+  <div class="col-md-5">
+    <h5 class="mb-3">Create appointment</h5>
+    <form method="post" class="mb-4">
+      <div class="mb-2">
+        <label class="form-label">Patient</label>
+        <select name="patient_id" class="form-select" required>
+          <option value="" disabled selected>Choose a patient</option>
+          {% for p in patients %}
+            <option value="{{ p.id }}">{{ p.name }}{% if p.age %} (age {{ p.age }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">Doctor</label>
+        <select name="doctor_id" class="form-select" required>
+          <option value="" disabled selected>Choose a doctor</option>
+          {% for d in doctors %}
+            <option value="{{ d.id }}">{{ d.name }}{% if d.specialty %} — {{ d.specialty }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">Scheduled at</label>
+        <input name="scheduled_at" type="datetime-local" class="form-control" required>
+        <div class="form-text">Use local date & time (browser will format).</div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">Notes</label>
+        <textarea name="notes" class="form-control" rows="3"></textarea>
+      </div>
+
+      <button class="btn btn-success" type="submit">Create appointment</button>
+    </form>
+  </div>
+
+  <div class="col-md-7">
+    <h5 class="mb-3">Existing appointments</h5>
+    {% if appointments %}
+      <div class="table-responsive">
+        <table class="table table-striped table-sm">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Scheduled</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in appointments %}
+            <tr>
+              <td>{{ a.id }}</td>
+              <td>{{ a.patient.name if a.patient else ('#' ~ a.patient_id) }}</td>
+              <td>{{ a.doctor.name if a.doctor else ('#' ~ a.doctor_id) }}</td>
+              <td>
+                {% if a.scheduled_at %}
+                  {{ a.scheduled_at.strftime('%Y-%m-%d %H:%M') }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>{{ a.notes or '' }}</td>
+              <td>
+                <form method="post" action="{{ url_for('admin_delete_appointment', aid=a.id) }}" onsubmit="return confirm('Delete appointment #{{ a.id }}?');">
+                  <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-secondary">No appointments found.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
